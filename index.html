@@ -1,1500 +1,1358 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Inventory & Sales Manager</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font: Inter -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .no-print { display: block; }
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Inventory & Sales Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .no-print { display: block; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
 
-
-    <!-- Notification Toast Box -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-20 opacity-0 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 max-w-sm pointer-events-none">
-        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-xl"></i>
-        <span id="toast-msg" class="text-sm font-medium">Notification message</span>
-    </div>
-
-
-    <!-- LOCK SCREEN OVERLAY -->
-    <div id="lock-screen" class="fixed inset-0 z-40 bg-slate-900 bg-opacity-95 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md text-center border border-slate-100">
-            <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
-                <i class="fas fa-store"></i>
-            </div>
-            <h2 id="lock-store-title" class="text-2xl font-bold text-slate-800 mb-1">My Store Manager</h2>
-            <p class="text-xs text-slate-500 mb-6">Enter your security PIN to access store data</p>
-
-
-            <form id="lock-form" onsubmit="handleUnlock(event)">
-                <div class="mb-4">
-                    <input type="password" id="pin-input" placeholder="Enter PIN (Default: 1234)" maxlength="6" pattern="[0-9]*" inputmode="numeric" required class="w-full text-center text-2xl tracking-widest py-3 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition">
-                </div>
-                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition transform active:scale-98">
-                    Unlock Dashboard <i class="fas fa-arrow-right ml-2"></i>
-                </button>
-            </form>
-            <p class="text-xs text-slate-400 mt-4">First time? Default PIN is <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-semibold">1234</span></p>
-        </div>
-    </div>
-
-
-    <!-- MAIN APP CONTAINER -->
-    <div id="app-container" class="flex-1 flex flex-col hidden">
-
-
-        <!-- HEADER / NAVIGATION BAR -->
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <!-- Store Branding -->
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md shadow-brand-500/20">
-                            <i class="fas fa-boxes-stacked"></i>
-                        </div>
-                        <div>
-                            <h1 id="header-store-name" class="font-bold text-slate-800 text-base sm:text-lg leading-tight">My Store</h1>
-                            <span id="header-store-phone" class="text-xs text-slate-500 block sm:inline">Ph: --</span>
-                        </div>
-                    </div>
-
-
-                    <!-- Header Actions -->
-                    <div class="flex items-center space-x-2 sm:space-x-3">
-                        <button onclick="openSettingsModal()" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Store Settings">
-                            <i class="fas fa-sliders text-lg"></i>
-                        </button>
-                        <button onclick="exportBackup()" class="p-2 text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition" title="Export Backup">
-                            <i class="fas fa-file-export text-lg"></i>
-                        </button>
-                        <label for="import-file-input" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition cursor-pointer" title="Import Data">
-                            <i class="fas fa-file-import text-lg"></i>
-                        </label>
-                        <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importBackup(event)">
-                        <button onclick="lockApp()" class="p-2 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition" title="Lock App">
-                            <i class="fas fa-lock text-lg"></i>
-                        </button>
-                    </div>
-                </div>
-
-
-                <!-- Navigation Tabs -->
-                <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto py-2 scrollbar-none">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active-tab px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Dashboard</span>
-                    </button>
-                    <button onclick="switchTab('stock')" id="nav-stock" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
-                        <i class="fas fa-box"></i>
-                        <span>Stock & Purchases</span>
-                    </button>
-                    <button onclick="switchTab('sales')" id="nav-sales" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Sales Entry</span>
-                    </button>
-                    <button onclick="switchTab('parties')" id="nav-parties" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
-                        <i class="fas fa-address-book"></i>
-                        <span>Party / Customer Ledger</span>
-                    </button>
-                </nav>
-            </div>
-        </header>
-
-
-        <!-- MAIN BODY AREA -->
-        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-
-
-            <!-- TAB 1: SUMMARY DASHBOARD -->
-            <section id="tab-dashboard" class="tab-content space-y-6">
-                <!-- Stat Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Inventory Value</p>
-                            <h3 id="stat-total-val" class="text-2xl font-bold text-slate-800 mt-1">₹0</h3>
-                            <p id="stat-total-items" class="text-xs text-slate-500 mt-1">0 Unique Items</p>
-                        </div>
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
-                            <i class="fas fa-cubes"></i>
-                        </div>
-                    </div>
-
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's Total Sales</p>
-                            <h3 id="stat-today-sales" class="text-2xl font-bold text-slate-800 mt-1">₹0</h3>
-                            <p id="stat-today-count" class="text-xs text-slate-500 mt-1">0 Bills Generated</p>
-                        </div>
-                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center text-xl">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                        </div>
-                    </div>
-
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Outstanding (Receivables)</p>
-                            <h3 id="stat-due-amount" class="text-2xl font-bold text-amber-600 mt-1">₹0</h3>
-                            <p id="stat-due-parties" class="text-xs text-slate-500 mt-1">Across 0 Parties</p>
-                        </div>
-                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
-                            <i class="fas fa-hand-holding-dollar"></i>
-                        </div>
-                    </div>
-
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock Alert</p>
-                            <h3 id="stat-low-stock" class="text-2xl font-bold text-rose-600 mt-1">0 Items</h3>
-                            <p class="text-xs text-slate-500 mt-1">Needs Replenishment</p>
-                        </div>
-                        <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl">
-                            <i class="fas fa-triangle-exclamation"></i>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- Quick Actions & Alerts Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Low Stock Table -->
-                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
-                                <i class="fas fa-exclamation-circle text-rose-500"></i>
-                                <span>Low Stock Items Alert</span>
-                            </h3>
-                            <button onclick="switchTab('stock')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View All Stock &rarr;</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase">
-                                        <th class="py-2 px-3">Item Name</th>
-                                        <th class="py-2 px-3">Category</th>
-                                        <th class="py-2 px-3 text-right">In Stock</th>
-                                        <th class="py-2 px-3 text-right">Min Threshold</th>
-                                        <th class="py-2 px-3 text-center">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dashboard-lowstock-body" class="text-sm divide-y divide-slate-50">
-                                    <!-- Dynamic content -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-
-                    <!-- Recent Activity Summary -->
-                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
-                                <i class="fas fa-clock-rotate-left text-brand-600"></i>
-                                <span>Quick Actions</span>
-                            </h3>
-                            <div class="space-y-3">
-                                <button onclick="openNewSaleModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between shadow-md shadow-emerald-500/20 transition">
-                                    <span class="flex items-center space-x-2">
-                                        <i class="fas fa-cart-plus"></i>
-                                        <span>New Quick Sale</span>
-                                    </span>
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="openNewPurchaseModal()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between shadow-md shadow-brand-500/20 transition">
-                                    <span class="flex items-center space-x-2">
-                                        <i class="fas fa-truck-ramp-box"></i>
-                                        <span>Add Purchase / Goods</span>
-                                    </span>
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                                <button onclick="resetToDemoData()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 text-xs transition">
-                                    <i class="fas fa-arrows-rotate"></i>
-                                    <span>Reload Sample Demo Data</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-400 text-center">
-                            Tip: Data is stored securely in your web browser.
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
-            <!-- TAB 2: STOCK & PURCHASES -->
-            <section id="tab-stock" class="tab-content hidden space-y-6">
-                <!-- Controls & Search Header -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="relative w-full sm:w-80">
-                        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-                        <input type="text" id="stock-search" oninput="renderStockTable()" placeholder="Search item name or category..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
-                    </div>
-                    <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
-                        <select id="stock-category-filter" onchange="renderStockTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="ALL">All Categories</option>
-                        </select>
-                        <button onclick="openNewPurchaseModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold py-2 px-4 rounded-xl shadow-md shadow-brand-500/20 flex items-center space-x-2 transition whitespace-nowrap">
-                            <i class="fas fa-plus"></i>
-                            <span>Add Stock / Goods</span>
-                        </button>
-                    </div>
-                </div>
-
-
-                <!-- Stock List Table -->
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    <th class="py-3 px-4">Item & Code</th>
-                                    <th class="py-3 px-4">Category</th>
-                                    <th class="py-3 px-4 text-right">Cost Price</th>
-                                    <th class="py-3 px-4 text-right">Selling Price</th>
-                                    <th class="py-3 px-4 text-right">In Stock</th>
-                                    <th class="py-3 px-4 text-right">Stock Value</th>
-                                    <th class="py-3 px-4 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stock-table-body" class="divide-y divide-slate-100 text-sm">
-                                <!-- Dynamic Render -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-
-            <!-- TAB 3: DAILY SALES LOG & ENTRY -->
-            <section id="tab-sales" class="tab-content hidden space-y-6">
-                <!-- Controls & Sales Header -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="flex items-center space-x-3 w-full sm:w-auto">
-                        <input type="date" id="sales-date-filter" onchange="renderSalesTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <button onclick="clearSalesDateFilter()" class="text-xs text-slate-500 hover:text-slate-800">Clear Date Filter</button>
-                    </div>
-                    <button onclick="openNewSaleModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2.5 px-5 rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-2 transition">
-                        <i class="fas fa-plus"></i>
-                        <span>New Sales Entry</span>
-                    </button>
-                </div>
-
-
-                <!-- Sales History Table -->
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    <th class="py-3 px-4">Date</th>
-                                    <th class="py-3 px-4">Invoice #</th>
-                                    <th class="py-3 px-4">Party / Customer</th>
-                                    <th class="py-3 px-4">Items Sold</th>
-                                    <th class="py-3 px-4 text-right">Grand Total</th>
-                                    <th class="py-3 px-4 text-right">Paid Amount</th>
-                                    <th class="py-3 px-4 text-center">Status</th>
-                                    <th class="py-3 px-4 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sales-table-body" class="divide-y divide-slate-100 text-sm">
-                                <!-- Dynamic Render -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-
-            <!-- TAB 4: PARTY / CUSTOMER LEDGER -->
-            <section id="tab-parties" class="tab-content hidden space-y-6">
-                <!-- Search & Header -->
-                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
-                    <div class="relative w-full sm:w-80">
-                        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-                        <input type="text" id="party-search" oninput="renderPartyLedger()" placeholder="Search customer/party name or phone..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
-                    </div>
-                </div>
-
-
-                <!-- Party List Grid -->
-                <div id="party-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Dynamic Party Cards -->
-                </div>
-            </section>
-
-
-        </main>
-    </div>
-
-
-    <!-- MODAL 1: ADD / EDIT PURCHASE / STOCK ENTRY -->
-    <div id="modal-purchase" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 transform transition-all">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h3 id="modal-purchase-title" class="font-bold text-slate-800 text-lg">Add Goods / Stock Purchase</h3>
-                <button onclick="closeModal('modal-purchase')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <form id="purchase-form" onsubmit="savePurchaseEntry(event)" class="p-6 space-y-4">
-                <input type="hidden" id="p-id">
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Purchase Date</label>
-                        <input type="date" id="p-date" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
-                        <input type="text" id="p-category" placeholder="e.g. Rice, Electronics" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                </div>
-
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Item Name</label>
-                    <input type="text" id="p-name" placeholder="e.g. Basmati Rice 5kg" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                </div>
-
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
-                        <input type="number" id="p-qty" min="1" step="any" placeholder="10" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Cost Price (<span class="currency-symbol">₹</span>)</label>
-                        <input type="number" id="p-cost" min="0" step="any" placeholder="400" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Sell Price (<span class="currency-symbol">₹</span>)</label>
-                        <input type="number" id="p-sell" min="0" step="any" placeholder="500" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                </div>
-
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Supplier / Party Name (Optional)</label>
-                        <input type="text" id="p-supplier" placeholder="e.g. Wholesale Supplier" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Low Stock Threshold</label>
-                        <input type="number" id="p-min" min="0" value="5" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                    </div>
-                </div>
-
-
-                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-purchase')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-md shadow-brand-500/20">Save Stock Entry</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- MODAL 2: NEW SALES ENTRY -->
-    <div id="modal-sale" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="font-bold text-slate-800 text-lg">Create Sales Entry / Invoice</h3>
-                <button onclick="closeModal('modal-sale')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            
-            <form id="sale-form" onsubmit="saveSaleEntry(event)" class="p-6 space-y-4 overflow-y-auto flex-1">
-                <!-- Date & Party Details -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Sale Date</label>
-                        <input type="date" id="s-date" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Party / Customer Name</label>
-                        <input type="text" id="s-party-name" placeholder="Cash / Walk-in Customer" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Customer Phone (Optional)</label>
-                        <input type="tel" id="s-party-phone" placeholder="Mobile Number" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                    </div>
-                </div>
-
-
-                <!-- Items Picker Table -->
-                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">Cart Items</span>
-                        <button type="button" onclick="addSaleCartRow()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold py-1 px-3 rounded-lg transition">
-                            <i class="fas fa-plus mr-1"></i> Add Item
-                        </button>
-                    </div>
-
-
-                    <div class="space-y-2" id="sale-cart-rows">
-                        <!-- Cart row dynamic -->
-                    </div>
-                </div>
-
-
-                <!-- Calculation & Payment Breakdown -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
-                            <select id="s-payment-status" onchange="handlePaymentStatusChange()" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
-                                <option value="PAID">Full Paid</option>
-                                <option value="PARTIAL">Partial Payment</option>
-                                <option value="CREDIT">Unpaid / On Credit</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount Paid (<span class="currency-symbol">₹</span>)</label>
-                            <input type="number" id="s-paid-amount" min="0" step="any" oninput="calculateSaleTotals()" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                        </div>
-                    </div>
-
-
-                    <div class="bg-slate-100 p-4 rounded-xl flex flex-col justify-center space-y-2 text-right">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Grand Total:</span>
-                            <span id="s-grand-total" class="font-bold text-slate-800 text-lg">₹0.00</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Balance Due:</span>
-                            <span id="s-due-total" class="font-bold text-rose-600">₹0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-sale')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-500/20">Complete Sale & Deduct Stock</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- MODAL 3: STORE SETTINGS -->
-    <div id="modal-settings" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 transform transition-all">
-            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="font-bold text-slate-800 text-lg">Store Setup & Settings</h3>
-                <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <form id="settings-form" onsubmit="saveStoreSettings(event)" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Store Name</label>
-                    <input type="text" id="set-store-name" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Currency Symbol</label>
-                    <input type="text" id="set-currency" required placeholder="₹, NPR, $, €" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contact Phone Number</label>
-                    <input type="text" id="set-phone" placeholder="e.g. +977 9800000000" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Security Access PIN (Numerical)</label>
-                    <input type="password" id="set-pin" maxlength="6" pattern="[0-9]*" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                </div>
-
-
-                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-md shadow-brand-500/20">Save Store Setup</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- MODAL 4: INVOICE / RECEIPT VIEW -->
-    <div id="modal-invoice" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 transform transition-all p-6 space-y-4">
-            <div class="flex justify-between items-start border-b border-slate-100 pb-4 no-print">
-                <h3 class="font-bold text-slate-800 text-lg">Sales Receipt</h3>
-                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            
-            <div id="invoice-printable-area" class="space-y-4 text-sm text-slate-700">
-                <div class="text-center pb-3 border-b border-dashed border-slate-300">
-                    <h2 id="inv-store-name" class="font-bold text-slate-900 text-lg">Store Name</h2>
-                    <p id="inv-store-phone" class="text-xs text-slate-500">Contact: --</p>
-                    <p id="inv-date-no" class="text-xs text-slate-400 mt-1">Date: -- | Inv: #--</p>
-                </div>
-
-
-                <div class="text-xs">
-                    <p><strong>Customer:</strong> <span id="inv-party-name">--</span></p>
-                    <p><strong>Phone:</strong> <span id="inv-party-phone">--</span></p>
-                </div>
-
-
-                <table class="w-full text-xs text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-slate-200">
-                            <th class="py-1">Item</th>
-                            <th class="py-1 text-center">Qty</th>
-                            <th class="py-1 text-right">Price</th>
-                            <th class="py-1 text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inv-items-body" class="divide-y divide-slate-100">
-                        <!-- Dynamic lines -->
-                    </tbody>
-                </table>
-
-
-                <div class="pt-2 border-t border-slate-200 text-xs space-y-1 text-right">
-                    <div class="flex justify-between">
-                        <span>Grand Total:</span>
-                        <span id="inv-total" class="font-bold text-slate-900">₹0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Paid:</span>
-                        <span id="inv-paid" class="text-emerald-600 font-semibold">₹0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Balance Due:</span>
-                        <span id="inv-due" class="text-rose-600 font-semibold">₹0</span>
-                    </div>
-                </div>
-
-
-                <div class="text-center pt-4 text-xs text-slate-400 italic border-t border-slate-100">
-                    Thank you for your business!
-                </div>
-            </div>
-
-
-            <div class="pt-4 flex space-x-3 no-print border-t border-slate-100">
-                <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-xl text-sm transition flex items-center justify-center space-x-2">
-                    <i class="fas fa-print"></i>
-                    <span>Print Receipt</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- JAVASCRIPT APPLICATION LOGIC -->
-    <script>
-        // --- DATA STATE MANAGEMENT ---
-        const DB_SETTINGS_KEY = 'store_manager_settings_v1';
-        const DB_STOCK_KEY = 'store_manager_stock_v1';
-        const DB_SALES_KEY = 'store_manager_sales_v1';
-
-
-        // Default Store Configuration
-        let settings = {
-            storeName: 'My Super Store',
-            currency: '₹',
-            phone: '+91 9876543210',
-            pin: '1234'
-        };
-
-
-        let stockItems = [];
-        let salesRecords = [];
-
-
-        // Initial Demo Seed Data
-        const initialDemoStock = [
-            { id: 'stk_1', date: '2026-10-25', name: 'Basmati Rice 5kg', category: 'Groceries', costPrice: 450, sellPrice: 550, qty: 25, minThreshold: 5, supplier: 'National Traders' },
-            { id: 'stk_2', date: '2026-10-26', name: 'Sunflower Cooking Oil 1L', category: 'Groceries', costPrice: 130, sellPrice: 160, qty: 4, minThreshold: 10, supplier: 'Agro Distributors' },
-            { id: 'stk_3', date: '2026-10-28', name: 'Organic Green Tea 250g', category: 'Beverages', costPrice: 180, sellPrice: 240, qty: 18, minThreshold: 5, supplier: 'Tea Estate Co' },
-            { id: 'stk_4', date: '2026-10-29', name: 'Whole Wheat Flour 10kg', category: 'Groceries', costPrice: 320, sellPrice: 390, qty: 2, minThreshold: 8, supplier: 'National Traders' }
-        ];
-
-
-        const initialDemoSales = [
-            { 
-                id: 'inv_1001', 
-                date: '2026-11-01', 
-                partyName: 'Rahul Sharma', 
-                partyPhone: '9812345678', 
-                items: [{ id: 'stk_1', name: 'Basmati Rice 5kg', qty: 2, price: 550, total: 1100 }], 
-                grandTotal: 1100, 
-                paidAmount: 1100, 
-                dueAmount: 0, 
-                status: 'PAID' 
-            },
-            { 
-                id: 'inv_1002', 
-                date: '2026-11-01', 
-                partyName: 'Anita Gupta', 
-                partyPhone: '9876543210', 
-                items: [{ id: 'stk_2', name: 'Sunflower Cooking Oil 1L', qty: 2, price: 160, total: 320 }], 
-                grandTotal: 320, 
-                paidAmount: 100, 
-                dueAmount: 220, 
-                status: 'PARTIAL' 
-            }
-        ];
-
-
-        // --- APP INIT ---
-        window.onload = function() {
-            loadLocalData();
-            updateUI();
-            
-            // Set today's default date in inputs
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('p-date').value = todayStr;
-            document.getElementById('s-date').value = todayStr;
-        };
-
-
-        function loadLocalData() {
-            const savedSettings = localStorage.getItem(DB_SETTINGS_KEY);
-            if (savedSettings) {
-                settings = JSON.parse(savedSettings);
-            } else {
-                localStorage.setItem(DB_SETTINGS_KEY, JSON.stringify(settings));
-            }
-
-
-            const savedStock = localStorage.getItem(DB_STOCK_KEY);
-            if (savedStock) {
-                stockItems = JSON.parse(savedStock);
-            } else {
-                stockItems = initialDemoStock;
-                localStorage.setItem(DB_STOCK_KEY, JSON.stringify(stockItems));
-            }
-
-
-            const savedSales = localStorage.getItem(DB_SALES_KEY);
-            if (savedSales) {
-                salesRecords = JSON.parse(savedSales);
-            } else {
-                salesRecords = initialDemoSales;
-                localStorage.setItem(DB_SALES_KEY, JSON.stringify(salesRecords));
-            }
-        }
-
-
-        function resetToDemoData() {
-            if(confirm("Are you sure you want to reload sample demo data? Your current entries will be overwritten.")) {
-                stockItems = initialDemoStock;
-                salesRecords = initialDemoSales;
-                saveAllData();
-                updateUI();
-                showToast("Demo data loaded successfully!");
-            }
-        }
-
-
-        function saveAllData() {
-            localStorage.setItem(DB_SETTINGS_KEY, JSON.stringify(settings));
-            localStorage.setItem(DB_STOCK_KEY, JSON.stringify(stockItems));
-            localStorage.setItem(DB_SALES_KEY, JSON.stringify(salesRecords));
-        }
-
-
-        // --- SECURITY / AUTH ---
-        function handleUnlock(e) {
-            e.preventDefault();
-            const pinInput = document.getElementById('pin-input').value;
-            if (pinInput === settings.pin) {
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('pin-input').value = '';
-                showToast(`Welcome to ${settings.storeName}!`);
-            } else {
-                showToast('Incorrect Security PIN!', true);
-            }
-        }
-
-
-        function lockApp() {
-            document.getElementById('app-container').classList.add('hidden');
-            document.getElementById('lock-screen').classList.remove('hidden');
-            showToast('App Locked');
-        }
-
-
-        // --- UI REFRESH & NAVIGATION ---
-        function updateUI() {
-            // Header Info
-            document.getElementById('header-store-name').innerText = settings.storeName;
-            document.getElementById('lock-store-title').innerText = settings.storeName;
-            document.getElementById('header-store-phone').innerText = settings.phone ? `Ph: ${settings.phone}` : '';
-            
-            // Currency Symbols Across App
-            document.querySelectorAll('.currency-symbol').forEach(el => el.innerText = settings.currency);
-
-
-            // Populate Category Select Filter
-            populateCategoryFilter();
-
-
-            // Refresh Active Tab
-            renderDashboard();
-            renderStockTable();
-            renderSalesTable();
-            renderPartyLedger();
-        }
-
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-50', 'text-brand-600', 'font-semibold');
-                btn.classList.add('text-slate-600');
-            });
-
-
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            const navBtn = document.getElementById(`nav-${tabName}`);
-            navBtn.classList.add('bg-brand-50', 'text-brand-600', 'font-semibold');
-            navBtn.classList.remove('text-slate-600');
-        }
-
-
-        // --- TAB 1: DASHBOARD LOGIC ---
-        function renderDashboard() {
-            // Total Stock Value
-            let totalVal = stockItems.reduce((acc, item) => acc + (item.qty * item.sellPrice), 0);
-            document.getElementById('stat-total-val').innerText = `${settings.currency}${totalVal.toLocaleString()}`;
-            document.getElementById('stat-total-items').innerText = `${stockItems.length} Unique Items`;
-
-
-            // Today's Sales
-            const todayStr = new Date().toISOString().split('T')[0];
-            const todaySales = salesRecords.filter(s => s.date === todayStr);
-            let todayTotal = todaySales.reduce((acc, s) => acc + s.grandTotal, 0);
-            document.getElementById('stat-today-sales').innerText = `${settings.currency}${todayTotal.toLocaleString()}`;
-            document.getElementById('stat-today-count').innerText = `${todaySales.length} Bills Generated Today`;
-
-
-            // Total Receivables / Due
-            let totalDue = salesRecords.reduce((acc, s) => acc + s.dueAmount, 0);
-            const duePartiesCount = new Set(salesRecords.filter(s => s.dueAmount > 0).map(s => s.partyName)).size;
-            document.getElementById('stat-due-amount').innerText = `${settings.currency}${totalDue.toLocaleString()}`;
-            document.getElementById('stat-due-parties').innerText = `Across ${duePartiesCount} Parties`;
-
-
-            // Low Stock Items
-            const lowStockItems = stockItems.filter(item => item.qty <= item.minThreshold);
-            document.getElementById('stat-low-stock').innerText = `${lowStockItems.length} Items`;
-
-
-            // Render Low Stock Table
-            const tbody = document.getElementById('dashboard-lowstock-body');
-            tbody.innerHTML = '';
-
-
-            if (lowStockItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400 italic">No low stock alerts! All items adequately stocked.</td></tr>`;
-                return;
-            }
-
-
-            lowStockItems.forEach(item => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="py-2 px-3 font-medium text-slate-800">${item.name}</td>
-                        <td class="py-2 px-3 text-slate-500">${item.category}</td>
-                        <td class="py-2 px-3 text-right font-bold text-rose-600">${item.qty}</td>
-                        <td class="py-2 px-3 text-right text-slate-400">${item.minThreshold}</td>
-                        <td class="py-2 px-3 text-center">
-                            <button onclick="editStockItem('${item.id}')" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-600 px-2 py-1 rounded-md font-medium">
-                                Replenish
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-
-        // --- TAB 2: STOCK MANAGEMENT ---
-        function populateCategoryFilter() {
-            const filterSelect = document.getElementById('stock-category-filter');
-            const categories = [...new Set(stockItems.map(i => i.category))];
-            filterSelect.innerHTML = `<option value="ALL">All Categories</option>`;
-            categories.forEach(cat => {
-                filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
-        }
-
-
-        function renderStockTable() {
-            const searchQuery = document.getElementById('stock-search').value.toLowerCase();
-            const categoryFilter = document.getElementById('stock-category-filter').value;
-            const tbody = document.getElementById('stock-table-body');
-            tbody.innerHTML = '';
-
-
-            const filtered = stockItems.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery);
-                const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
-                return matchesSearch && matchesCategory;
-            });
-
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">No goods found matching your criteria.</td></tr>`;
-                return;
-            }
-
-
-            filtered.forEach(item => {
-                const stockVal = item.qty * item.sellPrice;
-                const isLow = item.qty <= item.minThreshold;
-
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="py-3 px-4">
-                            <div class="font-semibold text-slate-800">${item.name}</div>
-                            <div class="text-xs text-slate-400">Added: ${item.date} ${item.supplier ? `| Supplier: ${item.supplier}` : ''}</div>
-                        </td>
-                        <td class="py-3 px-4 text-slate-600"><span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full">${item.category}</span></td>
-                        <td class="py-3 px-4 text-right text-slate-600">${settings.currency}${item.costPrice}</td>
-                        <td class="py-3 px-4 text-right font-medium text-slate-800">${settings.currency}${item.sellPrice}</td>
-                        <td class="py-3 px-4 text-right font-bold ${isLow ? 'text-rose-600' : 'text-slate-800'}">
-                            ${item.qty}
-                            ${isLow ? '<i class="fas fa-exclamation-triangle text-xs text-rose-500 ml-1" title="Low Stock"></i>' : ''}
-                        </td>
-                        <td class="py-3 px-4 text-right font-medium text-emerald-600">${settings.currency}${stockVal.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-center space-x-2">
-                            <button onclick="editStockItem('${item.id}')" class="text-slate-400 hover:text-brand-600 p-1"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteStockItem('${item.id}')" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-
-        function openNewPurchaseModal() {
-            document.getElementById('purchase-form').reset();
-            document.getElementById('p-id').value = '';
-            document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('modal-purchase-title').innerText = 'Add Goods / Stock Purchase';
-            openModal('modal-purchase');
-        }
-
-
-        function editStockItem(id) {
-            const item = stockItems.find(i => i.id === id);
-            if (!item) return;
-
-
-            document.getElementById('p-id').value = item.id;
-            document.getElementById('p-date').value = item.date;
-            document.getElementById('p-category').value = item.category;
-            document.getElementById('p-name').value = item.name;
-            document.getElementById('p-qty').value = item.qty;
-            document.getElementById('p-cost').value = item.costPrice;
-            document.getElementById('p-sell').value = item.sellPrice;
-            document.getElementById('p-supplier').value = item.supplier || '';
-            document.getElementById('p-min').value = item.minThreshold || 5;
-
-
-            document.getElementById('modal-purchase-title').innerText = 'Edit Stock Entry';
-            openModal('modal-purchase');
-        }
-
-
-        function savePurchaseEntry(e) {
-            e.preventDefault();
-            const id = document.getElementById('p-id').value;
-            const newItem = {
-                id: id || 'stk_' + Date.now(),
-                date: document.getElementById('p-date').value,
-                category: document.getElementById('p-category').value.trim(),
-                name: document.getElementById('p-name').value.trim(),
-                qty: parseFloat(document.getElementById('p-qty').value),
-                costPrice: parseFloat(document.getElementById('p-cost').value),
-                sellPrice: parseFloat(document.getElementById('p-sell').value),
-                supplier: document.getElementById('p-supplier').value.trim(),
-                minThreshold: parseFloat(document.getElementById('p-min').value) || 5
-            };
-
-
-            if (id) {
-                const idx = stockItems.findIndex(i => i.id === id);
-                if (idx !== -1) stockItems[idx] = newItem;
-            } else {
-                stockItems.unshift(newItem);
-            }
-
-
-            saveAllData();
-            updateUI();
-            closeModal('modal-purchase');
-            showToast(id ? 'Stock entry updated!' : 'New stock purchase recorded!');
-        }
-
-
-        function deleteStockItem(id) {
-            if (confirm("Are you sure you want to delete this stock item?")) {
-                stockItems = stockItems.filter(i => i.id !== id);
-                saveAllData();
-                updateUI();
-                showToast('Stock item deleted.');
-            }
-        }
-
-
-        // --- TAB 3: SALES MANAGEMENT ---
-        function renderSalesTable() {
-            const dateFilter = document.getElementById('sales-date-filter').value;
-            const tbody = document.getElementById('sales-table-body');
-            tbody.innerHTML = '';
-
-
-            let filtered = salesRecords;
-            if (dateFilter) {
-                filtered = salesRecords.filter(s => s.date === dateFilter);
-            }
-
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">No sales transactions logged.</td></tr>`;
-                return;
-            }
-
-
-            filtered.forEach(sale => {
-                const statusBadge = sale.status === 'PAID' 
-                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">PAID</span>'
-                    : sale.status === 'PARTIAL'
-                    ? '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">PARTIAL</span>'
-                    : '<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">CREDIT</span>';
-
-
-                const itemSummary = sale.items.map(i => `${i.name} (x${i.qty})`).join(', ');
-
-
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50/80 transition">
-                        <td class="py-3 px-4 text-xs font-medium text-slate-500">${sale.date}</td>
-                        <td class="py-3 px-4 font-mono text-xs font-bold text-slate-700">${sale.id}</td>
-                        <td class="py-3 px-4">
-                            <div class="font-semibold text-slate-800">${sale.partyName}</div>
-                            <div class="text-xs text-slate-400">${sale.partyPhone || ''}</div>
-                        </td>
-                        <td class="py-3 px-4 text-slate-600 text-xs truncate max-w-xs" title="${itemSummary}">${itemSummary}</td>
-                        <td class="py-3 px-4 text-right font-bold text-slate-800">${settings.currency}${sale.grandTotal.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-right text-emerald-600 font-semibold">${settings.currency}${sale.paidAmount.toLocaleString()}</td>
-                        <td class="py-3 px-4 text-center">${statusBadge}</td>
-                        <td class="py-3 px-4 text-center space-x-2">
-                            <button onclick="viewInvoice('${sale.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Print Receipt"><i class="fas fa-receipt"></i></button>
-                            <button onclick="deleteSaleRecord('${sale.id}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete Sale"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-
-        function clearSalesDateFilter() {
-            document.getElementById('sales-date-filter').value = '';
-            renderSalesTable();
-        }
-
-
-        function openNewSaleModal() {
-            document.getElementById('sale-form').reset();
-            document.getElementById('s-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('sale-cart-rows').innerHTML = '';
-            addSaleCartRow(); // Add initial item row
-            openModal('modal-sale');
-        }
-
-
-        function addSaleCartRow() {
-            const container = document.getElementById('sale-cart-rows');
-            const rowId = 'cart_row_' + Date.now() + Math.random().toString(36).substr(2, 4);
-
-
-            let optionsHtml = `<option value="">-- Select Item --</option>`;
-            stockItems.forEach(item => {
-                optionsHtml += `<option value="${item.id}" data-price="${item.sellPrice}" data-stock="${item.qty}">${item.name} (In Stock: ${item.qty})</option>`;
-            });
-
-
-            const row = document.createElement('div');
-            row.id = rowId;
-            row.className = 'grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-xl border border-slate-200';
-            row.innerHTML = `
-                <div class="col-span-5">
-                    <select onchange="onCartItemChange('${rowId}')" class="cart-item-select w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                        ${optionsHtml}
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <input type="number" min="1" step="any" value="1" oninput="calculateSaleTotals()" class="cart-item-qty w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 text-center focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Qty">
-                </div>
-                <div class="col-span-2">
-                    <input type="number" step="any" value="0" oninput="calculateSaleTotals()" class="cart-item-price w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Price">
-                </div>
-                <div class="col-span-2 text-right font-bold text-xs text-slate-700">
-                    <span class="cart-item-total">${settings.currency}0</span>
-                </div>
-                <div class="col-span-1 text-center">
-                    <button type="button" onclick="removeSaleCartRow('${rowId}')" class="text-rose-400 hover:text-rose-600"><i class="fas fa-trash-alt text-xs"></i></button>
-                </div>
-            `;
-            container.appendChild(row);
-        }
-
-
-        function removeSaleCartRow(rowId) {
-            const row = document.getElementById(rowId);
-            if (row) {
-                row.remove();
-                calculateSaleTotals();
-            }
-        }
-
-
-        function onCartItemChange(rowId) {
-            const row = document.getElementById(rowId);
-            const select = row.querySelector('.cart-item-select');
-            const selectedOpt = select.options[select.selectedIndex];
-            const price = selectedOpt.getAttribute('data-price') || 0;
-            row.querySelector('.cart-item-price').value = price;
-            calculateSaleTotals();
-        }
-
-
-        function calculateSaleTotals() {
-            let grandTotal = 0;
-            const rows = document.querySelectorAll('#sale-cart-rows > div');
-
-
-            rows.forEach(row => {
-                const qty = parseFloat(row.querySelector('.cart-item-qty').value) || 0;
-                const price = parseFloat(row.querySelector('.cart-item-price').value) || 0;
-                const total = qty * price;
-                row.querySelector('.cart-item-total').innerText = `${settings.currency}${total.toFixed(2)}`;
-                grandTotal += total;
-            });
-
-
-            document.getElementById('s-grand-total').innerText = `${settings.currency}${grandTotal.toFixed(2)}`;
-
-
-            // Calculate status & dues
-            const status = document.getElementById('s-payment-status').value;
-            const paidInput = document.getElementById('s-paid-amount');
-
-
-            if (status === 'PAID') {
-                paidInput.value = grandTotal;
-            } else if (status === 'CREDIT') {
-                paidInput.value = 0;
-            }
-
-
-            const paidVal = parseFloat(paidInput.value) || 0;
-            const dueVal = Math.max(0, grandTotal - paidVal);
-
-
-            document.getElementById('s-due-total').innerText = `${settings.currency}${dueVal.toFixed(2)}`;
-        }
-
-
-        function handlePaymentStatusChange() {
-            calculateSaleTotals();
-        }
-
-
-        function saveSaleEntry(e) {
-            e.preventDefault();
-
-
-            const partyName = document.getElementById('s-party-name').value.trim();
-            const partyPhone = document.getElementById('s-party-phone').value.trim();
-            const date = document.getElementById('s-date').value;
-            const status = document.getElementById('s-payment-status').value;
-
-
-            const cartRows = document.querySelectorAll('#sale-cart-rows > div');
-            let items = [];
-            let stockValidationFailed = false;
-
-
-            cartRows.forEach(row => {
-                const select = row.querySelector('.cart-item-select');
-                const itemId = select.value;
-                const qty = parseFloat(row.querySelector('.cart-item-qty').value) || 0;
-                const price = parseFloat(row.querySelector('.cart-item-price').value) || 0;
-
-
-                if (!itemId || qty <= 0) return;
-
-
-                const stockItem = stockItems.find(i => i.id === itemId);
-                if (stockItem) {
-                    if (stockItem.qty < qty) {
-                        alert(`Not enough stock for ${stockItem.name}. Current stock: ${stockItem.qty}`);
-                        stockValidationFailed = true;
-                        return;
-                    }
-                    items.push({
-                        id: itemId,
-                        name: stockItem.name,
-                        qty: qty,
-                        price: price,
-                        total: qty * price
-                    });
-                }
-            });
-
-
-            if (stockValidationFailed) return;
-
-
-            if (items.length === 0) {
-                alert("Please select at least one item to sell.");
-                return;
-            }
-
-
-            let grandTotal = items.reduce((acc, i) => acc + i.total, 0);
-            let paidAmount = parseFloat(document.getElementById('s-paid-amount').value) || 0;
-            let dueAmount = Math.max(0, grandTotal - paidAmount);
-
-
-            // Deduct Stock
-            items.forEach(soldItem => {
-                const stkIdx = stockItems.findIndex(i => i.id === soldItem.id);
-                if (stkIdx !== -1) {
-                    stockItems[stkIdx].qty -= soldItem.qty;
-                }
-            });
-
-
-            // Record Sale
-            const saleRecord = {
-                id: 'INV-' + Math.floor(1000 + Math.random() * 9000),
-                date: date,
-                partyName: partyName,
-                partyPhone: partyPhone,
-                items: items,
-                grandTotal: grandTotal,
-                paidAmount: paidAmount,
-                dueAmount: dueAmount,
-                status: status
-            };
-
-
-            salesRecords.unshift(saleRecord);
-            saveAllData();
-            updateUI();
-            closeModal('modal-sale');
-            showToast('Sales completed & stock updated!');
-
-
-            // Open Receipt Preview
-            viewInvoice(saleRecord.id);
-        }
-
-
-        function deleteSaleRecord(id) {
-            if (confirm("Are you sure you want to delete this sale entry? (Note: Stock levels will not be auto-restored).")) {
-                salesRecords = salesRecords.filter(s => s.id !== id);
-                saveAllData();
-                updateUI();
-                showToast('Sale record deleted.');
-            }
-        }
-
-
-        // --- TAB 4: PARTY / CUSTOMER LEDGER ---
-        function renderPartyLedger() {
-            const searchQuery = document.getElementById('party-search').value.toLowerCase();
-            const grid = document.getElementById('party-cards-grid');
-            grid.innerHTML = '';
-
-
-            // Group sales by Party Name
-            const partyMap = {};
-
-
-            salesRecords.forEach(sale => {
-                const pName = sale.partyName.trim();
-                if (!partyMap[pName]) {
-                    partyMap[pName] = {
-                        name: pName,
-                        phone: sale.partyPhone || 'N/A',
-                        totalBilled: 0,
-                        totalPaid: 0,
-                        totalDue: 0,
-                        history: []
-                    };
-                }
-                partyMap[pName].totalBilled += sale.grandTotal;
-                partyMap[pName].totalPaid += sale.paidAmount;
-                partyMap[pName].totalDue += sale.dueAmount;
-                if (sale.partyPhone && partyMap[pName].phone === 'N/A') {
-                    partyMap[pName].phone = sale.partyPhone;
-                }
-                partyMap[pName].history.push(sale);
-            });
-
-
-            const parties = Object.values(partyMap).filter(p => 
-                p.name.toLowerCase().includes(searchQuery) || p.phone.toLowerCase().includes(searchQuery)
-            );
-
-
-            if (parties.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">No parties or customer ledgers found.</div>`;
-                return;
-            }
-
-
-            parties.forEach(p => {
-                grid.innerHTML += `
-                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-bold text-slate-800 text-base">${p.name}</h3>
-                                <p class="text-xs text-slate-400"><i class="fas fa-phone mr-1"></i>${p.phone}</p>
-                            </div>
-                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${p.totalDue > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
-                                ${p.totalDue > 0 ? 'Pending' : 'Clear'}
-                            </span>
-                        </div>
-
-
-                        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-center text-xs">
-                            <div>
-                                <span class="text-slate-400 block">Total Billed</span>
-                                <span class="font-bold text-slate-700">${settings.currency}${p.totalBilled.toLocaleString()}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-400 block">Paid</span>
-                                <span class="font-bold text-emerald-600">${settings.currency}${p.totalPaid.toLocaleString()}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-400 block">Due Balance</span>
-                                <span class="font-bold text-rose-600">${settings.currency}${p.totalDue.toLocaleString()}</span>
-                            </div>
-                        </div>
-
-
-                        <div class="pt-2 flex justify-between items-center text-xs">
-                            <span class="text-slate-400">${p.history.length} Invoices Logged</span>
-                            ${p.totalDue > 0 ? `
-                                <button onclick="clearPartyDue('${p.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-semibold transition">
-                                    Clear Outstanding
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-
-        function clearPartyDue(partyName) {
-            if (confirm(`Settle & clear all outstanding balance for customer: "${partyName}"?`)) {
-                salesRecords.forEach(sale => {
-                    if (sale.partyName.trim() === partyName && sale.dueAmount > 0) {
-                        sale.paidAmount += sale.dueAmount;
-                        sale.dueAmount = 0;
-                        sale.status = 'PAID';
-                    }
-                });
-                saveAllData();
-                updateUI();
-                showToast(`Balances cleared for ${partyName}`);
-            }
-        }
-
-
-        // --- INVOICE VIEW LOGIC ---
-        function viewInvoice(saleId) {
-            const sale = salesRecords.find(s => s.id === saleId);
-            if (!sale) return;
-
-
-            document.getElementById('inv-store-name').innerText = settings.storeName;
-            document.getElementById('inv-store-phone').innerText = settings.phone ? `Ph: ${settings.phone}` : '';
-            document.getElementById('inv-date-no').innerText = `Date: ${sale.date} | Invoice: #${sale.id}`;
-            document.getElementById('inv-party-name').innerText = sale.partyName;
-            document.getElementById('inv-party-phone').innerText = sale.partyPhone || 'N/A';
-
-
-            const tbody = document.getElementById('inv-items-body');
-            tbody.innerHTML = '';
-            sale.items.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="py-1 font-medium">${item.name}</td>
-                        <td class="py-1 text-center">${item.qty}</td>
-                        <td class="py-1 text-right">${settings.currency}${item.price}</td>
-                        <td class="py-1 text-right font-semibold">${settings.currency}${item.total}</td>
-                    </tr>
-                `;
-            });
-
-
-            document.getElementById('inv-total').innerText = `${settings.currency}${sale.grandTotal}`;
-            document.getElementById('inv-paid').innerText = `${settings.currency}${sale.paidAmount}`;
-            document.getElementById('inv-due').innerText = `${settings.currency}${sale.dueAmount}`;
-
-
-            openModal('modal-invoice');
-        }
-
-
-        // --- STORE SETTINGS MODAL ---
-        function openSettingsModal() {
-            document.getElementById('set-store-name').value = settings.storeName;
-            document.getElementById('set-currency').value = settings.currency;
-            document.getElementById('set-phone').value = settings.phone || '';
-            document.getElementById('set-pin').value = settings.pin;
-            openModal('modal-settings');
-        }
-
-
-        function saveStoreSettings(e) {
-            e.preventDefault();
-            settings.storeName = document.getElementById('set-store-name').value.trim();
-            settings.currency = document.getElementById('set-currency').value.trim();
-            settings.phone = document.getElementById('set-phone').value.trim();
-            settings.pin = document.getElementById('set-pin').value.trim();
-
-
-            saveAllData();
-            updateUI();
-            closeModal('modal-settings');
-            showToast('Store settings updated!');
-        }
-
-
-        // --- DATA BACKUP & RESTORE ---
-        function exportBackup() {
-            const backupData = {
-                settings: settings,
-                stockItems: stockItems,
-                salesRecords: salesRecords,
-                exportedAt: new Date().toISOString()
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `Store_Backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            showToast('Backup JSON file downloaded!');
-        }
-
-
-        function importBackup(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const imported = JSON.parse(evt.target.result);
-                    if (imported.settings && imported.stockItems && imported.salesRecords) {
-                        settings = imported.settings;
-                        stockItems = imported.stockItems;
-                        salesRecords = imported.salesRecords;
-                        saveAllData();
-                        updateUI();
-                        showToast('Backup restored successfully!');
-                    } else {
-                        showToast('Invalid backup file structure.', true);
-                    }
-                } catch (err) {
-                    showToast('Failed to parse backup JSON.', true);
-                }
-            };
-            reader.readAsText(file);
-        }
-
-
-        // --- HELPER UTILITIES ---
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
-            const msgEl = document.getElementById('toast-msg');
-
-
-            msgEl.innerText = msg;
-            if (isError) {
-                icon.className = 'fas fa-exclamation-circle text-rose-400 text-xl';
-            } else {
-                icon.className = 'fas fa-check-circle text-emerald-400 text-xl';
-            }
-
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-    </script>
+    <!-- Notification Toast Box -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 translate-y-20 opacity-0 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 max-w-sm pointer-events-none">
+        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-xl"></i>
+        <span id="toast-msg" class="text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- LOCK SCREEN OVERLAY -->
+    <div id="lock-screen" class="fixed inset-0 z-40 bg-slate-900 bg-opacity-95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md text-center border border-slate-100">
+            <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fas fa-store"></i>
+            </div>
+            <h2 id="lock-store-title" class="text-2xl font-bold text-slate-800 mb-1">My Store Manager</h2>
+            <p class="text-xs text-slate-500 mb-6">Enter your security PIN to access store data</p>
+
+            <form id="lock-form" onsubmit="handleUnlock(event)">
+                <div class="mb-4">
+                    <input type="password" id="pin-input" placeholder="Enter PIN (Default: 1234)" maxlength="6" pattern="[0-9]*" inputmode="numeric" required class="w-full text-center text-2xl tracking-widest py-3 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition">
+                </div>
+                <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-brand-500/30 transition transform active:scale-98">
+                    Unlock Dashboard <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </form>
+            <p class="text-xs text-slate-400 mt-4">First time? Default PIN is <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-semibold">1234</span></p>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="flex-1 flex flex-col hidden">
+
+        <!-- HEADER / NAVIGATION BAR -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Store Branding -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md shadow-brand-500/20">
+                            <i class="fas fa-boxes-stacked"></i>
+                        </div>
+                        <div>
+                            <h1 id="header-store-name" class="font-bold text-slate-800 text-base sm:text-lg leading-tight">My Store</h1>
+                            <span id="header-store-phone" class="text-xs text-slate-500 block sm:inline">Ph: --</span>
+                        </div>
+                    </div>
+
+                    <!-- Header Actions -->
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <button onclick="openSettingsModal()" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition" title="Store Settings">
+                            <i class="fas fa-sliders text-lg"></i>
+                        </button>
+                        <button onclick="exportBackup()" class="p-2 text-slate-600 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition" title="Export Backup">
+                            <i class="fas fa-file-export text-lg"></i>
+                        </button>
+                        <label for="import-file-input" class="p-2 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-lg transition cursor-pointer" title="Import Data">
+                            <i class="fas fa-file-import text-lg"></i>
+                        </label>
+                        <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importBackup(event)">
+                        <button onclick="lockApp()" class="p-2 text-slate-600 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition" title="Lock App">
+                            <i class="fas fa-lock text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto py-2 scrollbar-none">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active-tab px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button onclick="switchTab('stock')" id="nav-stock" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
+                        <i class="fas fa-box"></i>
+                        <span>Stock & Purchases</span>
+                    </button>
+                    <button onclick="switchTab('sales')" id="nav-sales" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Sales Entry</span>
+                    </button>
+                    <button onclick="switchTab('parties')" id="nav-parties" class="tab-btn px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center space-x-2 whitespace-nowrap">
+                        <i class="fas fa-address-book"></i>
+                        <span>Party / Customer Ledger</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- MAIN BODY AREA -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+            <!-- TAB 1: SUMMARY DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Inventory Value</p>
+                            <h3 id="stat-total-val" class="text-2xl font-bold text-slate-800 mt-1">₹0</h3>
+                            <p id="stat-total-items" class="text-xs text-slate-500 mt-1">0 Unique Items</p>
+                        </div>
+                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's Total Sales</p>
+                            <h3 id="stat-today-sales" class="text-2xl font-bold text-slate-800 mt-1">₹0</h3>
+                            <p id="stat-today-count" class="text-xs text-slate-500 mt-1">0 Bills Generated</p>
+                        </div>
+                        <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Outstanding (Receivables)</p>
+                            <h3 id="stat-due-amount" class="text-2xl font-bold text-amber-600 mt-1">₹0</h3>
+                            <p id="stat-due-parties" class="text-xs text-slate-500 mt-1">Across 0 Parties</p>
+                        </div>
+                        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-hand-holding-dollar"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock Alert</p>
+                            <h3 id="stat-low-stock" class="text-2xl font-bold text-rose-600 mt-1">0 Items</h3>
+                            <p class="text-xs text-slate-500 mt-1">Needs Replenishment</p>
+                        </div>
+                        <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Alerts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Low Stock Table -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                                <i class="fas fa-exclamation-circle text-rose-500"></i>
+                                <span>Low Stock Items Alert</span>
+                            </h3>
+                            <button onclick="switchTab('stock')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View All Stock &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase">
+                                        <th class="py-2 px-3">Item Name</th>
+                                        <th class="py-2 px-3">Category</th>
+                                        <th class="py-2 px-3 text-right">In Stock</th>
+                                        <th class="py-2 px-3 text-right">Min Threshold</th>
+                                        <th class="py-2 px-3 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-lowstock-body" class="text-sm divide-y divide-slate-50">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Summary -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center space-x-2">
+                                <i class="fas fa-clock-rotate-left text-brand-600"></i>
+                                <span>Quick Actions</span>
+                            </h3>
+                            <div class="space-y-3">
+                                <button onclick="openNewSaleModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between shadow-md shadow-emerald-500/20 transition">
+                                    <span class="flex items-center space-x-2">
+                                        <i class="fas fa-cart-plus"></i>
+                                        <span>New Quick Sale</span>
+                                    </span>
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button onclick="openNewPurchaseModal()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-between shadow-md shadow-brand-500/20 transition">
+                                    <span class="flex items-center space-x-2">
+                                        <i class="fas fa-truck-ramp-box"></i>
+                                        <span>Add Purchase / Goods</span>
+                                    </span>
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button onclick="resetToDemoData()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center space-x-2 text-xs transition">
+                                    <i class="fas fa-arrows-rotate"></i>
+                                    <span>Reload Sample Demo Data</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-400 text-center">
+                            Tip: Data is stored securely in your web browser.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: STOCK & PURCHASES -->
+            <section id="tab-stock" class="tab-content hidden space-y-6">
+                <!-- Controls & Search Header -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="stock-search" oninput="renderStockTable()" placeholder="Search item name or category..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                    </div>
+                    <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                        <select id="stock-category-filter" onchange="renderStockTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="ALL">All Categories</option>
+                        </select>
+                        <button onclick="openNewPurchaseModal()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold py-2 px-4 rounded-xl shadow-md shadow-brand-500/20 flex items-center space-x-2 transition whitespace-nowrap">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Stock / Goods</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stock List Table -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-3 px-4">Item & Code</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4 text-right">Cost Price</th>
+                                    <th class="py-3 px-4 text-right">Selling Price</th>
+                                    <th class="py-3 px-4 text-right">In Stock</th>
+                                    <th class="py-3 px-4 text-right">Stock Value</th>
+                                    <th class="py-3 px-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: DAILY SALES LOG & ENTRY -->
+            <section id="tab-sales" class="tab-content hidden space-y-6">
+                <!-- Controls & Sales Header -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center space-x-3 w-full sm:w-auto">
+                        <input type="date" id="sales-date-filter" onchange="renderSalesTable()" class="py-2 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <button onclick="clearSalesDateFilter()" class="text-xs text-slate-500 hover:text-slate-800">Clear Date Filter</button>
+                    </div>
+                    <button onclick="openNewSaleModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2.5 px-5 rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-2 transition">
+                        <i class="fas fa-plus"></i>
+                        <span>New Sales Entry</span>
+                    </button>
+                </div>
+
+                <!-- Sales History Table -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-3 px-4">Date</th>
+                                    <th class="py-3 px-4">Invoice #</th>
+                                    <th class="py-3 px-4">Party / Customer</th>
+                                    <th class="py-3 px-4">Items Sold</th>
+                                    <th class="py-3 px-4 text-right">Grand Total</th>
+                                    <th class="py-3 px-4 text-right">Paid Amount</th>
+                                    <th class="py-3 px-4 text-center">Status</th>
+                                    <th class="py-3 px-4 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic Render -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PARTY / CUSTOMER LEDGER -->
+            <section id="tab-parties" class="tab-content hidden space-y-6">
+                <!-- Search & Header -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="party-search" oninput="renderPartyLedger()" placeholder="Search customer/party name or phone..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                    </div>
+                </div>
+
+                <!-- Party List Grid -->
+                <div id="party-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic Party Cards -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: ADD / EDIT PURCHASE / STOCK ENTRY -->
+    <div id="modal-purchase" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 transform transition-all">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 id="modal-purchase-title" class="font-bold text-slate-800 text-lg">Add Goods / Stock Purchase</h3>
+                <button onclick="closeModal('modal-purchase')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="purchase-form" onsubmit="savePurchaseEntry(event)" class="p-6 space-y-4">
+                <input type="hidden" id="p-id">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Purchase Date</label>
+                        <input type="date" id="p-date" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+                        <input type="text" id="p-category" placeholder="e.g. Rice, Electronics" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Item Name</label>
+                    <input type="text" id="p-name" placeholder="e.g. Basmati Rice 5kg" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+                        <input type="number" id="p-qty" min="1" step="any" placeholder="10" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Cost Price (<span class="currency-symbol">₹</span>)</label>
+                        <input type="number" id="p-cost" min="0" step="any" placeholder="400" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Sell Price (<span class="currency-symbol">₹</span>)</label>
+                        <input type="number" id="p-sell" min="0" step="any" placeholder="500" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Supplier / Party Name (Optional)</label>
+                        <input type="text" id="p-supplier" placeholder="e.g. Wholesale Supplier" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Low Stock Threshold</label>
+                        <input type="number" id="p-min" min="0" value="5" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-purchase')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-md shadow-brand-500/20">Save Stock Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NEW SALES ENTRY -->
+    <div id="modal-sale" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 transform transition-all max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg">Create Sales Entry / Invoice</h3>
+                <button onclick="closeModal('modal-sale')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <form id="sale-form" onsubmit="saveSaleEntry(event)" class="p-6 space-y-4 overflow-y-auto flex-1">
+                <!-- Date & Party Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Sale Date</label>
+                        <input type="date" id="s-date" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Party / Customer Name</label>
+                        <input type="text" id="s-party-name" placeholder="Cash / Walk-in Customer" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Customer Phone (Optional)</label>
+                        <input type="tel" id="s-party-phone" placeholder="Mobile Number" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Items Picker Table -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase text-slate-500 tracking-wider">Cart Items</span>
+                        <button type="button" onclick="addSaleCartRow()" class="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold py-1 px-3 rounded-lg transition">
+                            <i class="fas fa-plus mr-1"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="space-y-2" id="sale-cart-rows">
+                        <!-- Cart row dynamic -->
+                    </div>
+                </div>
+
+                <!-- Calculation & Payment Breakdown -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Payment Status</label>
+                            <select id="s-payment-status" onchange="handlePaymentStatusChange()" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+                                <option value="PAID">Full Paid</option>
+                                <option value="PARTIAL">Partial Payment</option>
+                                <option value="CREDIT">Unpaid / On Credit</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount Paid (<span class="currency-symbol">₹</span>)</label>
+                            <input type="number" id="s-paid-amount" min="0" step="any" oninput="calculateSaleTotals()" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-100 p-4 rounded-xl flex flex-col justify-center space-y-2 text-right">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Grand Total:</span>
+                            <span id="s-grand-total" class="font-bold text-slate-800 text-lg">₹0.00</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">Balance Due:</span>
+                            <span id="s-due-total" class="font-bold text-rose-600">₹0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-sale')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-500/20">Complete Sale & Deduct Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: STORE SETTINGS -->
+    <div id="modal-settings" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 transform transition-all">
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg">Store Setup & Settings</h3>
+                <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="settings-form" onsubmit="saveStoreSettings(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Store Name</label>
+                    <input type="text" id="set-store-name" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Currency Symbol</label>
+                    <input type="text" id="set-currency" required placeholder="₹, NPR, $, €" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contact Phone Number</label>
+                    <input type="text" id="set-phone" placeholder="e.g. +977 9800000000" class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Security Access PIN (Numerical)</label>
+                    <input type="password" id="set-pin" maxlength="6" pattern="[0-9]*" required class="w-full py-2 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-sm font-medium">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-md shadow-brand-500/20">Save Store Setup</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: INVOICE / RECEIPT VIEW -->
+    <div id="modal-invoice" class="fixed inset-0 z-50 bg-slate-900 bg-opacity-60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 transform transition-all p-6 space-y-4">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-4 no-print">
+                <h3 class="font-bold text-slate-800 text-lg">Sales Receipt</h3>
+                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div id="invoice-printable-area" class="space-y-4 text-sm text-slate-700">
+                <div class="text-center pb-3 border-b border-dashed border-slate-300">
+                    <h2 id="inv-store-name" class="font-bold text-slate-900 text-lg">Store Name</h2>
+                    <p id="inv-store-phone" class="text-xs text-slate-500">Contact: --</p>
+                    <p id="inv-date-no" class="text-xs text-slate-400 mt-1">Date: -- | Inv: #--</p>
+                </div>
+
+                <div class="text-xs">
+                    <p><strong>Customer:</strong> <span id="inv-party-name">--</span></p>
+                    <p><strong>Phone:</strong> <span id="inv-party-phone">--</span></p>
+                </div>
+
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="py-1">Item</th>
+                            <th class="py-1 text-center">Qty</th>
+                            <th class="py-1 text-right">Price</th>
+                            <th class="py-1 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-items-body" class="divide-y divide-slate-100">
+                        <!-- Dynamic lines -->
+                    </tbody>
+                </table>
+
+                <div class="pt-2 border-t border-slate-200 text-xs space-y-1 text-right">
+                    <div class="flex justify-between">
+                        <span>Grand Total:</span>
+                        <span id="inv-total" class="font-bold text-slate-900">₹0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Paid:</span>
+                        <span id="inv-paid" class="text-emerald-600 font-semibold">₹0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Balance Due:</span>
+                        <span id="inv-due" class="text-rose-600 font-semibold">₹0</span>
+                    </div>
+                </div>
+
+                <div class="text-center pt-4 text-xs text-slate-400 italic border-t border-slate-100">
+                    Thank you for your business!
+                </div>
+            </div>
+
+            <div class="pt-4 flex space-x-3 no-print border-t border-slate-100">
+                <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-xl text-sm transition flex items-center justify-center space-x-2">
+                    <i class="fas fa-print"></i>
+                    <span>Print Receipt</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // --- DATA STATE MANAGEMENT ---
+        const DB_SETTINGS_KEY = 'store_manager_settings_v1';
+        const DB_STOCK_KEY = 'store_manager_stock_v1';
+        const DB_SALES_KEY = 'store_manager_sales_v1';
+
+        // Default Store Configuration
+        let settings = {
+            storeName: 'My Super Store',
+            currency: '₹',
+            phone: '+91 9876543210',
+            pin: '1234'
+        };
+
+        let stockItems = [];
+        let salesRecords = [];
+
+        // Initial Demo Seed Data
+        const initialDemoStock = [
+            { id: 'stk_1', date: '2026-10-25', name: 'Basmati Rice 5kg', category: 'Groceries', costPrice: 450, sellPrice: 550, qty: 25, minThreshold: 5, supplier: 'National Traders' },
+            { id: 'stk_2', date: '2026-10-26', name: 'Sunflower Cooking Oil 1L', category: 'Groceries', costPrice: 130, sellPrice: 160, qty: 4, minThreshold: 10, supplier: 'Agro Distributors' },
+            { id: 'stk_3', date: '2026-10-28', name: 'Organic Green Tea 250g', category: 'Beverages', costPrice: 180, sellPrice: 240, qty: 18, minThreshold: 5, supplier: 'Tea Estate Co' },
+            { id: 'stk_4', date: '2026-10-29', name: 'Whole Wheat Flour 10kg', category: 'Groceries', costPrice: 320, sellPrice: 390, qty: 2, minThreshold: 8, supplier: 'National Traders' }
+        ];
+
+        const initialDemoSales = [
+            { 
+                id: 'inv_1001', 
+                date: '2026-11-01', 
+                partyName: 'Rahul Sharma', 
+                partyPhone: '9812345678', 
+                items: [{ id: 'stk_1', name: 'Basmati Rice 5kg', qty: 2, price: 550, total: 1100 }], 
+                grandTotal: 1100, 
+                paidAmount: 1100, 
+                dueAmount: 0, 
+                status: 'PAID' 
+            },
+            { 
+                id: 'inv_1002', 
+                date: '2026-11-01', 
+                partyName: 'Anita Gupta', 
+                partyPhone: '9876543210', 
+                items: [{ id: 'stk_2', name: 'Sunflower Cooking Oil 1L', qty: 2, price: 160, total: 320 }], 
+                grandTotal: 320, 
+                paidAmount: 100, 
+                dueAmount: 220, 
+                status: 'PARTIAL' 
+            }
+        ];
+
+        // --- APP INIT ---
+        window.onload = function() {
+            loadLocalData();
+            updateUI();
+            
+            // Set today's default date in inputs
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('p-date').value = todayStr;
+            document.getElementById('s-date').value = todayStr;
+        };
+
+        function loadLocalData() {
+            const savedSettings = localStorage.getItem(DB_SETTINGS_KEY);
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+            } else {
+                localStorage.setItem(DB_SETTINGS_KEY, JSON.stringify(settings));
+            }
+
+            const savedStock = localStorage.getItem(DB_STOCK_KEY);
+            if (savedStock) {
+                stockItems = JSON.parse(savedStock);
+            } else {
+                stockItems = initialDemoStock;
+                localStorage.setItem(DB_STOCK_KEY, JSON.stringify(stockItems));
+            }
+
+            const savedSales = localStorage.getItem(DB_SALES_KEY);
+            if (savedSales) {
+                salesRecords = JSON.parse(savedSales);
+            } else {
+                salesRecords = initialDemoSales;
+                localStorage.setItem(DB_SALES_KEY, JSON.stringify(salesRecords));
+            }
+        }
+
+        function resetToDemoData() {
+            if(confirm("Are you sure you want to reload sample demo data? Your current entries will be overwritten.")) {
+                stockItems = initialDemoStock;
+                salesRecords = initialDemoSales;
+                saveAllData();
+                updateUI();
+                showToast("Demo data loaded successfully!");
+            }
+        }
+
+        function saveAllData() {
+            localStorage.setItem(DB_SETTINGS_KEY, JSON.stringify(settings));
+            localStorage.setItem(DB_STOCK_KEY, JSON.stringify(stockItems));
+            localStorage.setItem(DB_SALES_KEY, JSON.stringify(salesRecords));
+        }
+
+        // --- SECURITY / AUTH ---
+        function handleUnlock(e) {
+            e.preventDefault();
+            const pinInput = document.getElementById('pin-input').value;
+            if (pinInput === settings.pin) {
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                document.getElementById('pin-input').value = '';
+                showToast(`Welcome to ${settings.storeName}!`);
+            } else {
+                showToast('Incorrect Security PIN!', true);
+            }
+        }
+
+        function lockApp() {
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('lock-screen').classList.remove('hidden');
+            showToast('App Locked');
+        }
+
+        // --- UI REFRESH & NAVIGATION ---
+        function updateUI() {
+            // Header Info
+            document.getElementById('header-store-name').innerText = settings.storeName;
+            document.getElementById('lock-store-title').innerText = settings.storeName;
+            document.getElementById('header-store-phone').innerText = settings.phone ? `Ph: ${settings.phone}` : '';
+            
+            // Currency Symbols Across App
+            document.querySelectorAll('.currency-symbol').forEach(el => el.innerText = settings.currency);
+
+            // Populate Category Select Filter
+            populateCategoryFilter();
+
+            // Refresh Active Tab
+            renderDashboard();
+            renderStockTable();
+            renderSalesTable();
+            renderPartyLedger();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-50', 'text-brand-600', 'font-semibold');
+                btn.classList.add('text-slate-600');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const navBtn = document.getElementById(`nav-${tabName}`);
+            navBtn.classList.add('bg-brand-50', 'text-brand-600', 'font-semibold');
+            navBtn.classList.remove('text-slate-600');
+        }
+
+        // --- TAB 1: DASHBOARD LOGIC ---
+        function renderDashboard() {
+            // Total Stock Value
+            let totalVal = stockItems.reduce((acc, item) => acc + (item.qty * item.sellPrice), 0);
+            document.getElementById('stat-total-val').innerText = `${settings.currency}${totalVal.toLocaleString()}`;
+            document.getElementById('stat-total-items').innerText = `${stockItems.length} Unique Items`;
+
+            // Today's Sales
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todaySales = salesRecords.filter(s => s.date === todayStr);
+            let todayTotal = todaySales.reduce((acc, s) => acc + s.grandTotal, 0);
+            document.getElementById('stat-today-sales').innerText = `${settings.currency}${todayTotal.toLocaleString()}`;
+            document.getElementById('stat-today-count').innerText = `${todaySales.length} Bills Generated Today`;
+
+            // Total Receivables / Due
+            let totalDue = salesRecords.reduce((acc, s) => acc + s.dueAmount, 0);
+            const duePartiesCount = new Set(salesRecords.filter(s => s.dueAmount > 0).map(s => s.partyName)).size;
+            document.getElementById('stat-due-amount').innerText = `${settings.currency}${totalDue.toLocaleString()}`;
+            document.getElementById('stat-due-parties').innerText = `Across ${duePartiesCount} Parties`;
+
+            // Low Stock Items
+            const lowStockItems = stockItems.filter(item => item.qty <= item.minThreshold);
+            document.getElementById('stat-low-stock').innerText = `${lowStockItems.length} Items`;
+
+            // Render Low Stock Table
+            const tbody = document.getElementById('dashboard-lowstock-body');
+            tbody.innerHTML = '';
+
+            if (lowStockItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400 italic">No low stock alerts! All items adequately stocked.</td></tr>`;
+                return;
+            }
+
+            lowStockItems.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2 px-3 font-medium text-slate-800">${item.name}</td>
+                        <td class="py-2 px-3 text-slate-500">${item.category}</td>
+                        <td class="py-2 px-3 text-right font-bold text-rose-600">${item.qty}</td>
+                        <td class="py-2 px-3 text-right text-slate-400">${item.minThreshold}</td>
+                        <td class="py-2 px-3 text-center">
+                            <button onclick="editStockItem('${item.id}')" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-600 px-2 py-1 rounded-md font-medium">
+                                Replenish
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- TAB 2: STOCK MANAGEMENT ---
+        function populateCategoryFilter() {
+            const filterSelect = document.getElementById('stock-category-filter');
+            const categories = [...new Set(stockItems.map(i => i.category))];
+            filterSelect.innerHTML = `<option value="ALL">All Categories</option>`;
+            categories.forEach(cat => {
+                filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        function renderStockTable() {
+            const searchQuery = document.getElementById('stock-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('stock-category-filter').value;
+            const tbody = document.getElementById('stock-table-body');
+            tbody.innerHTML = '';
+
+            const filtered = stockItems.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery);
+                const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">No goods found matching your criteria.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const stockVal = item.qty * item.sellPrice;
+                const isLow = item.qty <= item.minThreshold;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4">
+                            <div class="font-semibold text-slate-800">${item.name}</div>
+                            <div class="text-xs text-slate-400">Added: ${item.date} ${item.supplier ? `| Supplier: ${item.supplier}` : ''}</div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600"><span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full">${item.category}</span></td>
+                        <td class="py-3 px-4 text-right text-slate-600">${settings.currency}${item.costPrice}</td>
+                        <td class="py-3 px-4 text-right font-medium text-slate-800">${settings.currency}${item.sellPrice}</td>
+                        <td class="py-3 px-4 text-right font-bold ${isLow ? 'text-rose-600' : 'text-slate-800'}">
+                            ${item.qty}
+                            ${isLow ? '<i class="fas fa-exclamation-triangle text-xs text-rose-500 ml-1" title="Low Stock"></i>' : ''}
+                        </td>
+                        <td class="py-3 px-4 text-right font-medium text-emerald-600">${settings.currency}${stockVal.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-center space-x-2">
+                            <button onclick="editStockItem('${item.id}')" class="text-slate-400 hover:text-brand-600 p-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteStockItem('${item.id}')" class="text-slate-400 hover:text-rose-600 p-1"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openNewPurchaseModal() {
+            document.getElementById('purchase-form').reset();
+            document.getElementById('p-id').value = '';
+            document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modal-purchase-title').innerText = 'Add Goods / Stock Purchase';
+            openModal('modal-purchase');
+        }
+
+        function editStockItem(id) {
+            const item = stockItems.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('p-id').value = item.id;
+            document.getElementById('p-date').value = item.date;
+            document.getElementById('p-category').value = item.category;
+            document.getElementById('p-name').value = item.name;
+            document.getElementById('p-qty').value = item.qty;
+            document.getElementById('p-cost').value = item.costPrice;
+            document.getElementById('p-sell').value = item.sellPrice;
+            document.getElementById('p-supplier').value = item.supplier || '';
+            document.getElementById('p-min').value = item.minThreshold || 5;
+
+            document.getElementById('modal-purchase-title').innerText = 'Edit Stock Entry';
+            openModal('modal-purchase');
+        }
+
+        function savePurchaseEntry(e) {
+            e.preventDefault();
+            const id = document.getElementById('p-id').value;
+            const newItem = {
+                id: id || 'stk_' + Date.now(),
+                date: document.getElementById('p-date').value,
+                category: document.getElementById('p-category').value.trim(),
+                name: document.getElementById('p-name').value.trim(),
+                qty: parseFloat(document.getElementById('p-qty').value),
+                costPrice: parseFloat(document.getElementById('p-cost').value),
+                sellPrice: parseFloat(document.getElementById('p-sell').value),
+                supplier: document.getElementById('p-supplier').value.trim(),
+                minThreshold: parseFloat(document.getElementById('p-min').value) || 5
+            };
+
+            if (id) {
+                const idx = stockItems.findIndex(i => i.id === id);
+                if (idx !== -1) stockItems[idx] = newItem;
+            } else {
+                stockItems.unshift(newItem);
+            }
+
+            saveAllData();
+            updateUI();
+            closeModal('modal-purchase');
+            showToast(id ? 'Stock entry updated!' : 'New stock purchase recorded!');
+        }
+
+        function deleteStockItem(id) {
+            if (confirm("Are you sure you want to delete this stock item?")) {
+                stockItems = stockItems.filter(i => i.id !== id);
+                saveAllData();
+                updateUI();
+                showToast('Stock item deleted.');
+            }
+        }
+
+        // --- TAB 3: SALES MANAGEMENT ---
+        function renderSalesTable() {
+            const dateFilter = document.getElementById('sales-date-filter').value;
+            const tbody = document.getElementById('sales-table-body');
+            tbody.innerHTML = '';
+
+            let filtered = salesRecords;
+            if (dateFilter) {
+                filtered = salesRecords.filter(s => s.date === dateFilter);
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">No sales transactions logged.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(sale => {
+                const statusBadge = sale.status === 'PAID' 
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">PAID</span>'
+                    : sale.status === 'PARTIAL'
+                    ? '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">PARTIAL</span>'
+                    : '<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">CREDIT</span>';
+
+                const itemSummary = sale.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 text-xs font-medium text-slate-500">${sale.date}</td>
+                        <td class="py-3 px-4 font-mono text-xs font-bold text-slate-700">${sale.id}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-semibold text-slate-800">${sale.partyName}</div>
+                            <div class="text-xs text-slate-400">${sale.partyPhone || ''}</div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600 text-xs truncate max-w-xs" title="${itemSummary}">${itemSummary}</td>
+                        <td class="py-3 px-4 text-right font-bold text-slate-800">${settings.currency}${sale.grandTotal.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-right text-emerald-600 font-semibold">${settings.currency}${sale.paidAmount.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-center">${statusBadge}</td>
+                        <td class="py-3 px-4 text-center space-x-2">
+                            <button onclick="viewInvoice('${sale.id}')" class="text-slate-500 hover:text-brand-600 p-1" title="Print Receipt"><i class="fas fa-receipt"></i></button>
+                            <button onclick="deleteSaleRecord('${sale.id}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete Sale"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function clearSalesDateFilter() {
+            document.getElementById('sales-date-filter').value = '';
+            renderSalesTable();
+        }
+
+        function openNewSaleModal() {
+            document.getElementById('sale-form').reset();
+            document.getElementById('s-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('sale-cart-rows').innerHTML = '';
+            addSaleCartRow(); // Add initial item row
+            openModal('modal-sale');
+        }
+
+        function addSaleCartRow() {
+            const container = document.getElementById('sale-cart-rows');
+            const rowId = 'cart_row_' + Date.now() + Math.random().toString(36).substr(2, 4);
+
+            let optionsHtml = `<option value="">-- Select Item --</option>`;
+            stockItems.forEach(item => {
+                optionsHtml += `<option value="${item.id}" data-price="${item.sellPrice}" data-stock="${item.qty}">${item.name} (In Stock: ${item.qty})</option>`;
+            });
+
+            const row = document.createElement('div');
+            row.id = rowId;
+            row.className = 'grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-xl border border-slate-200';
+            row.innerHTML = `
+                <div class="col-span-5">
+                    <select onchange="onCartItemChange('${rowId}')" class="cart-item-select w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <input type="number" min="1" step="any" value="1" oninput="calculateSaleTotals()" class="cart-item-qty w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 text-center focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Qty">
+                </div>
+                <div class="col-span-2">
+                    <input type="number" step="any" value="0" oninput="calculateSaleTotals()" class="cart-item-price w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="Price">
+                </div>
+                <div class="col-span-2 text-right font-bold text-xs text-slate-700">
+                    <span class="cart-item-total">${settings.currency}0</span>
+                </div>
+                <div class="col-span-1 text-center">
+                    <button type="button" onclick="removeSaleCartRow('${rowId}')" class="text-rose-400 hover:text-rose-600"><i class="fas fa-trash-alt text-xs"></i></button>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function removeSaleCartRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) {
+                row.remove();
+                calculateSaleTotals();
+            }
+        }
+
+        function onCartItemChange(rowId) {
+            const row = document.getElementById(rowId);
+            const select = row.querySelector('.cart-item-select');
+            const selectedOpt = select.options[select.selectedIndex];
+            const price = selectedOpt.getAttribute('data-price') || 0;
+            row.querySelector('.cart-item-price').value = price;
+            calculateSaleTotals();
+        }
+
+        function calculateSaleTotals() {
+            let grandTotal = 0;
+            const rows = document.querySelectorAll('#sale-cart-rows > div');
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.cart-item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.cart-item-price').value) || 0;
+                const total = qty * price;
+                row.querySelector('.cart-item-total').innerText = `${settings.currency}${total.toFixed(2)}`;
+                grandTotal += total;
+            });
+
+            document.getElementById('s-grand-total').innerText = `${settings.currency}${grandTotal.toFixed(2)}`;
+
+            // Calculate status & dues
+            const status = document.getElementById('s-payment-status').value;
+            const paidInput = document.getElementById('s-paid-amount');
+
+            if (status === 'PAID') {
+                paidInput.value = grandTotal;
+            } else if (status === 'CREDIT') {
+                paidInput.value = 0;
+            }
+
+            const paidVal = parseFloat(paidInput.value) || 0;
+            const dueVal = Math.max(0, grandTotal - paidVal);
+
+            document.getElementById('s-due-total').innerText = `${settings.currency}${dueVal.toFixed(2)}`;
+        }
+
+        function handlePaymentStatusChange() {
+            calculateSaleTotals();
+        }
+
+        function saveSaleEntry(e) {
+            e.preventDefault();
+
+            const partyName = document.getElementById('s-party-name').value.trim();
+            const partyPhone = document.getElementById('s-party-phone').value.trim();
+            const date = document.getElementById('s-date').value;
+            const status = document.getElementById('s-payment-status').value;
+
+            const cartRows = document.querySelectorAll('#sale-cart-rows > div');
+            let items = [];
+            let stockValidationFailed = false;
+
+            cartRows.forEach(row => {
+                const select = row.querySelector('.cart-item-select');
+                const itemId = select.value;
+                const qty = parseFloat(row.querySelector('.cart-item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.cart-item-price').value) || 0;
+
+                if (!itemId || qty <= 0) return;
+
+                const stockItem = stockItems.find(i => i.id === itemId);
+                if (stockItem) {
+                    if (stockItem.qty < qty) {
+                        alert(`Not enough stock for ${stockItem.name}. Current stock: ${stockItem.qty}`);
+                        stockValidationFailed = true;
+                        return;
+                    }
+                    items.push({
+                        id: itemId,
+                        name: stockItem.name,
+                        qty: qty,
+                        price: price,
+                        total: qty * price
+                    });
+                }
+            });
+
+            if (stockValidationFailed) return;
+
+            if (items.length === 0) {
+                alert("Please select at least one item to sell.");
+                return;
+            }
+
+            let grandTotal = items.reduce((acc, i) => acc + i.total, 0);
+            let paidAmount = parseFloat(document.getElementById('s-paid-amount').value) || 0;
+            let dueAmount = Math.max(0, grandTotal - paidAmount);
+
+            // Deduct Stock
+            items.forEach(soldItem => {
+                const stkIdx = stockItems.findIndex(i => i.id === soldItem.id);
+                if (stkIdx !== -1) {
+                    stockItems[stkIdx].qty -= soldItem.qty;
+                }
+            });
+
+            // Record Sale
+            const saleRecord = {
+                id: 'INV-' + Math.floor(1000 + Math.random() * 9000),
+                date: date,
+                partyName: partyName,
+                partyPhone: partyPhone,
+                items: items,
+                grandTotal: grandTotal,
+                paidAmount: paidAmount,
+                dueAmount: dueAmount,
+                status: status
+            };
+
+            salesRecords.unshift(saleRecord);
+            saveAllData();
+            updateUI();
+            closeModal('modal-sale');
+            showToast('Sales completed & stock updated!');
+
+            // Open Receipt Preview
+            viewInvoice(saleRecord.id);
+        }
+
+        function deleteSaleRecord(id) {
+            if (confirm("Are you sure you want to delete this sale entry? (Note: Stock levels will not be auto-restored).")) {
+                salesRecords = salesRecords.filter(s => s.id !== id);
+                saveAllData();
+                updateUI();
+                showToast('Sale record deleted.');
+            }
+        }
+
+        // --- TAB 4: PARTY / CUSTOMER LEDGER ---
+        function renderPartyLedger() {
+            const searchQuery = document.getElementById('party-search').value.toLowerCase();
+            const grid = document.getElementById('party-cards-grid');
+            grid.innerHTML = '';
+
+            // Group sales by Party Name
+            const partyMap = {};
+
+            salesRecords.forEach(sale => {
+                const pName = sale.partyName.trim();
+                if (!partyMap[pName]) {
+                    partyMap[pName] = {
+                        name: pName,
+                        phone: sale.partyPhone || 'N/A',
+                        totalBilled: 0,
+                        totalPaid: 0,
+                        totalDue: 0,
+                        history: []
+                    };
+                }
+                partyMap[pName].totalBilled += sale.grandTotal;
+                partyMap[pName].totalPaid += sale.paidAmount;
+                partyMap[pName].totalDue += sale.dueAmount;
+                if (sale.partyPhone && partyMap[pName].phone === 'N/A') {
+                    partyMap[pName].phone = sale.partyPhone;
+                }
+                partyMap[pName].history.push(sale);
+            });
+
+            const parties = Object.values(partyMap).filter(p => 
+                p.name.toLowerCase().includes(searchQuery) || p.phone.toLowerCase().includes(searchQuery)
+            );
+
+            if (parties.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400">No parties or customer ledgers found.</div>`;
+                return;
+            }
+
+            parties.forEach(p => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base">${p.name}</h3>
+                                <p class="text-xs text-slate-400"><i class="fas fa-phone mr-1"></i>${p.phone}</p>
+                            </div>
+                            <span class="text-xs px-2.5 py-1 rounded-full font-bold ${p.totalDue > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                                ${p.totalDue > 0 ? 'Pending' : 'Clear'}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl text-center text-xs">
+                            <div>
+                                <span class="text-slate-400 block">Total Billed</span>
+                                <span class="font-bold text-slate-700">${settings.currency}${p.totalBilled.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block">Paid</span>
+                                <span class="font-bold text-emerald-600">${settings.currency}${p.totalPaid.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block">Due Balance</span>
+                                <span class="font-bold text-rose-600">${settings.currency}${p.totalDue.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex justify-between items-center text-xs">
+                            <span class="text-slate-400">${p.history.length} Invoices Logged</span>
+                            ${p.totalDue > 0 ? `
+                                <button onclick="clearPartyDue('${p.name}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-semibold transition">
+                                    Clear Outstanding
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function clearPartyDue(partyName) {
+            if (confirm(`Settle & clear all outstanding balance for customer: "${partyName}"?`)) {
+                salesRecords.forEach(sale => {
+                    if (sale.partyName.trim() === partyName && sale.dueAmount > 0) {
+                        sale.paidAmount += sale.dueAmount;
+                        sale.dueAmount = 0;
+                        sale.status = 'PAID';
+                    }
+                });
+                saveAllData();
+                updateUI();
+                showToast(`Balances cleared for ${partyName}`);
+            }
+        }
+
+        // --- INVOICE VIEW LOGIC ---
+        function viewInvoice(saleId) {
+            const sale = salesRecords.find(s => s.id === saleId);
+            if (!sale) return;
+
+            document.getElementById('inv-store-name').innerText = settings.storeName;
+            document.getElementById('inv-store-phone').innerText = settings.phone ? `Ph: ${settings.phone}` : '';
+            document.getElementById('inv-date-no').innerText = `Date: ${sale.date} | Invoice: #${sale.id}`;
+            document.getElementById('inv-party-name').innerText = sale.partyName;
+            document.getElementById('inv-party-phone').innerText = sale.partyPhone || 'N/A';
+
+            const tbody = document.getElementById('inv-items-body');
+            tbody.innerHTML = '';
+            sale.items.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="py-1 font-medium">${item.name}</td>
+                        <td class="py-1 text-center">${item.qty}</td>
+                        <td class="py-1 text-right">${settings.currency}${item.price}</td>
+                        <td class="py-1 text-right font-semibold">${settings.currency}${item.total}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('inv-total').innerText = `${settings.currency}${sale.grandTotal}`;
+            document.getElementById('inv-paid').innerText = `${settings.currency}${sale.paidAmount}`;
+            document.getElementById('inv-due').innerText = `${settings.currency}${sale.dueAmount}`;
+
+            openModal('modal-invoice');
+        }
+
+        // --- STORE SETTINGS MODAL ---
+        function openSettingsModal() {
+            document.getElementById('set-store-name').value = settings.storeName;
+            document.getElementById('set-currency').value = settings.currency;
+            document.getElementById('set-phone').value = settings.phone || '';
+            document.getElementById('set-pin').value = settings.pin;
+            openModal('modal-settings');
+        }
+
+        function saveStoreSettings(e) {
+            e.preventDefault();
+            settings.storeName = document.getElementById('set-store-name').value.trim();
+            settings.currency = document.getElementById('set-currency').value.trim();
+            settings.phone = document.getElementById('set-phone').value.trim();
+            settings.pin = document.getElementById('set-pin').value.trim();
+
+            saveAllData();
+            updateUI();
+            closeModal('modal-settings');
+            showToast('Store settings updated!');
+        }
+
+        // --- DATA BACKUP & RESTORE ---
+        function exportBackup() {
+            const backupData = {
+                settings: settings,
+                stockItems: stockItems,
+                salesRecords: salesRecords,
+                exportedAt: new Date().toISOString()
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Store_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('Backup JSON file downloaded!');
+        }
+
+        function importBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (imported.settings && imported.stockItems && imported.salesRecords) {
+                        settings = imported.settings;
+                        stockItems = imported.stockItems;
+                        salesRecords = imported.salesRecords;
+                        saveAllData();
+                        updateUI();
+                        showToast('Backup restored successfully!');
+                    } else {
+                        showToast('Invalid backup file structure.', true);
+                    }
+                } catch (err) {
+                    showToast('Failed to parse backup JSON.', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- HELPER UTILITIES ---
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msgEl = document.getElementById('toast-msg');
+
+            msgEl.innerText = msg;
+            if (isError) {
+                icon.className = 'fas fa-exclamation-circle text-rose-400 text-xl';
+            } else {
+                icon.className = 'fas fa-check-circle text-emerald-400 text-xl';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
-```
